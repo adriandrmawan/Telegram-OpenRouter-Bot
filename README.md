@@ -58,9 +58,7 @@ This is a Telegram bot that acts as an interface to AI models available through 
 
 ### Option 1: Deploy to Cloudflare Button
 
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME)
-
-**(Remember to replace `YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME` in the button URL above with your actual GitHub repository URL after you push the code there!)**
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/adriandrmawan/Telegram-OpenRouter-Bot)
 
 After deploying with the button, **you MUST configure the Secrets and Variables** as described in the Configuration section in your Cloudflare dashboard.
 
