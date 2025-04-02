@@ -25,6 +25,9 @@
   "search_error": "❌ Terjadi kesalahan saat pencarian web. Silakan coba lagi nanti.",
   "search_results_title": "🔍 Hasil Pencarian Web untuk \"{query}\":",
   "search_no_results": "ℹ️ Tidak ada hasil pencarian web yang ditemukan untuk \"{query}\".",
-  "help": "Perintah yang tersedia:\n/start - Mulai bot dan dapatkan instruksi\n/setkey KUNCI_API_ANDA - Simpan kunci API OpenRouter Anda\n/setmodel ID_MODEL - Atur model AI default\n/setsystemprompt PROMPT_ANDA - Atur system prompt kustom (atau kosongkan untuk reset)\n/resetsettings - Hapus semua pengaturan tersimpan Anda\n/ask PERTANYAAN_ANDA - Ajukan pertanyaan ke AI (mengingat riwayat percakapan)\n/newchat - Hapus riwayat percakapan dan mulai baru\n/search KUERI_ANDA - Lakukan pencarian web\n/help - Tampilkan pesan bantuan ini",
+  "models_list_fetching": "⏳ Mengambil daftar model yang tersedia...",
+  "models_list_title": "🤖 Model yang Tersedia:",
+  "models_list_error": "❌ Tidak dapat mengambil daftar model. Pastikan kunci API Anda benar dan coba lagi.",
+  "help": "Perintah yang tersedia:\n/start - Mulai bot dan dapatkan instruksi\n/setkey KUNCI_API_ANDA - Simpan kunci API OpenRouter Anda\n/setmodel ID_MODEL - Atur model AI default\n/listmodels - Tampilkan daftar model AI yang tersedia\n/setsystemprompt PROMPT_ANDA - Atur system prompt kustom (atau kosongkan untuk reset)\n/resetsettings - Hapus semua pengaturan tersimpan Anda\n/ask PERTANYAAN_ANDA - Ajukan pertanyaan ke AI (mengingat riwayat percakapan)\n/newchat - Hapus riwayat percakapan dan mulai baru\n/search KUERI_ANDA - Lakukan pencarian web\n/help - Tampilkan pesan bantuan ini",
   "current_settings": "⚙️ Pengaturan Anda saat ini:\nModel: `{model}`\nSystem Prompt: `{systemPrompt}`"
 }

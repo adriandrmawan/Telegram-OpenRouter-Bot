@@ -297,8 +297,8 @@ function levenshteinDistance(s1, s2) {
  * @returns {string | null} The detected command name (without /) or null if no close match.
  */
 function detectCommand(input) {
-    // Add 'search' to the list of commands
-    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat', 'search']; // Bot commands
+    // Add 'listmodels' to the list of commands
+    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat', 'search', 'listmodels']; // Bot commands
     if (!input || !input.startsWith('/')) {
         return null;
     }
@@ -478,6 +478,36 @@ async function checkOpenRouterModel(apiKey, modelId) {
 		console.error(`Error checking OpenRouter model ${modelId}:`, error);
 		return false;
 	}
+}
+
+/**
+ * Fetches the list of models from OpenRouter.
+ * Requires a valid API key.
+ * @param {string} apiKey - A valid OpenRouter API key.
+ * @returns {Promise<Array<{id: string, name: string}>>} A list of models.
+ */
+async function getOpenRouterModels(apiKey) {
+    if (!apiKey) {
+        throw new Error("API key is required to fetch models.");
+    }
+    const url = `${OPENROUTER_API_BASE}/models`;
+    try {
+        const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${apiKey}` },
+        });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('OpenRouter Models API Error:', response.status, errorData);
+            throw new Error(`Failed to fetch models (Status: ${response.status})`);
+        }
+        const data = await response.json();
+        // Assuming the models are in the 'data' array based on typical API structures
+        // Adjust if the actual OpenRouter API response structure is different
+        return data.data || [];
+    } catch (error) {
+        console.error('Error fetching OpenRouter models:', error);
+        throw error; // Re-throw the error to be handled by the caller
+    }
 }
 
 
@@ -790,10 +820,38 @@ export default {
                             console.error('Search command error:', error);
                             await editMessageText(env, chatId, thinkingMessageId, t(lang, 'search_error'));
                         }
+						break;
+					}
+                    case 'listmodels': {
+                        if (!userSettings.apiKey) {
+                            await sendMessage(env, chatId, t(lang, 'key_required'));
+                            break;
+                        }
+                        await sendMessage(env, chatId, t(lang, 'models_list_fetching'));
+                        try {
+                            const models = await getOpenRouterModels(userSettings.apiKey);
+                            if (models && models.length > 0) {
+                                // Format the list - potentially long, consider pagination or sending in chunks if needed
+                                let modelListText = t(lang, 'models_list_title') + "\n\n";
+                                models.forEach(model => {
+                                    // Use backticks for model IDs to allow easy copying on Telegram
+                                    modelListText += `- \`${model.id}\` (${model.name || 'No name provided'})\n`;
+                                });
+                                // Telegram messages have a size limit (4096 chars). If the list is very long, this might fail.
+                                // A more robust solution might involve pagination or sending multiple messages.
+                                // For now, send as one message.
+                                await sendMessage(env, chatId, modelListText);
+                            } else {
+                                await sendMessage(env, chatId, t(lang, 'models_list_error')); // Or a specific "no models found" message
+                            }
+                        } catch (error) {
+                            console.error('Error handling /listmodels:', error);
+                            await sendMessage(env, chatId, t(lang, 'models_list_error'));
+                        }
                         break;
                     }
 					case 'help': {
-						// TODO: Update help text to include /search
+						// TODO: Update help text to include /listmodels
 						await sendMessage(env, chatId, t(lang, 'help') + '\n\n' + t(lang, 'current_settings', { model: userSettings.model, systemPrompt: userSettings.systemPrompt }));
 						break;
 					}
