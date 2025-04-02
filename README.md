@@ -1,3 +1,5 @@
+[Baca dalam Bahasa Indonesia](README.id.md)
+
 # Telegram OpenRouter Bot (Cloudflare Worker)
 
 This is a Telegram bot that acts as an interface to AI models available through OpenRouter.ai. It runs entirely on Cloudflare Workers, utilizing KV storage for user settings and environment variables for configuration.
