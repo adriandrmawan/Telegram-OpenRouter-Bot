@@ -120,6 +120,7 @@ Berinteraksi dengan bot Anda di Telegram:
 *   `/resetsettings`: Menghapus kunci API, model, dan prompt sistem yang tersimpan.
 *   `/ask PERTANYAAN_ANDA`: Mengajukan pertanyaan ke model AI yang dikonfigurasi. Bot mengingat beberapa pesan terakhir dalam percakapan. Respons akan di-stream.
 *   `/newchat`: Menghapus memori bot tentang riwayat percakapan saat ini, memulai obrolan baru.
+*   `/search KUERI_ANDA`: Melakukan pencarian web menggunakan Google (dengan Bing sebagai cadangan jika dikonfigurasi) dan mengembalikan hasil teratas. Memerlukan pengaturan administrator.
 *   `/help`: Menampilkan daftar perintah yang tersedia dan pengaturan saat ini.
 
 Selamat menikmati asisten AI Anda di Telegram!

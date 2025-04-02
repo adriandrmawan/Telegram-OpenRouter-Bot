@@ -19,6 +19,12 @@
   "unauthorized": "🚫 Sorry, you are not authorized to use this bot.",
   "generic_error": "❌ An unexpected error occurred. Please contact the administrator.",
   "new_chat_success": "✅ Conversation history cleared. Starting a new chat.",
-  "help": "Available commands:\n/start - Start the bot and get instructions\n/setkey YOUR_API_KEY - Save your OpenRouter API key\n/setmodel MODEL_ID - Set the default AI model\n/setsystemprompt YOUR_PROMPT - Set a custom system prompt (or leave empty to reset)\n/resetsettings - Clear all your saved settings\n/ask YOUR_QUESTION - Ask the AI a question (remembers conversation history)\n/newchat - Clear the conversation history and start fresh\n/help - Show this help message",
+  "search_invalid": "❌ Invalid command format. Use `/search YOUR_QUERY`.",
+  "search_keys_missing": "⚠️ Web search functionality requires Google API Key and CX to be configured by the bot administrator.",
+  "search_thinking": "🔎 Searching the web...",
+  "search_error": "❌ An error occurred during the web search. Please try again later.",
+  "search_results_title": "🔍 Web Search Results for \"{query}\":",
+  "search_no_results": "ℹ️ No web search results found for \"{query}\".",
+  "help": "Available commands:\n/start - Start the bot and get instructions\n/setkey YOUR_API_KEY - Save your OpenRouter API key\n/setmodel MODEL_ID - Set the default AI model\n/setsystemprompt YOUR_PROMPT - Set a custom system prompt (or leave empty to reset)\n/resetsettings - Clear all your saved settings\n/ask YOUR_QUESTION - Ask the AI a question (remembers conversation history)\n/newchat - Clear the conversation history and start fresh\n/search YOUR_QUERY - Perform a web search\n/help - Show this help message",
   "current_settings": "⚙️ Your current settings:\nModel: `{model}`\nSystem Prompt: `{systemPrompt}`"
 }

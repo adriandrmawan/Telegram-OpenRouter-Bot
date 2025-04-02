@@ -120,6 +120,7 @@ Interact with your bot on Telegram:
 *   `/resetsettings`: Clears your stored API key, model, and system prompt.
 *   `/ask YOUR_QUESTION`: Asks the configured AI model a question. The bot remembers the last few messages in the conversation. The response will be streamed.
 *   `/newchat`: Clears the bot's memory of the current conversation history, starting a fresh chat.
+*   `/search YOUR_QUERY`: Performs a web search using Google (with Bing as a fallback if configured) and returns the top results. Requires administrator setup.
 *   `/help`: Shows the list of available commands and current settings.
 
 Enjoy your AI assistant on Telegram!

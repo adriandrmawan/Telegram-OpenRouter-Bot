@@ -54,36 +54,63 @@ function md5Hash(input) {
  * Placeholder for Google Search API call.
  * @param {string} query
  * @param {Environment} env
- * @returns {Promise<object>} // Replace object with actual search result structure
+ * @returns {Promise<Array<{title: string, link: string, snippet: string}>>} Processed search results.
  */
 async function googleSearch(query, env) {
-    // TODO: Implement actual Google Custom Search API call
-    console.warn(`Placeholder googleSearch called with query: ${query}`);
-    // Example structure (adjust based on actual API response):
-    // const url = `https://www.googleapis.com/customsearch/v1?key=${env.GOOGLE_API_KEY}&cx=${env.GOOGLE_CX}&q=${encodeURIComponent(query)}`;
-    // const response = await fetch(url);
-    // if (!response.ok) throw new Error('Google Search API failed');
-    // const data = await response.json();
-    // return data.items; // Or process as needed
-    return Promise.resolve({ results: [{ title: "Placeholder Google Result", link: "http://example.com/google", snippet: "This is a placeholder." }] });
+    console.log(`Performing Google Search for: ${query}`);
+    const url = `https://www.googleapis.com/customsearch/v1?key=${env.GOOGLE_API_KEY}&cx=${env.GOOGLE_CX}&q=${encodeURIComponent(query)}&num=5`; // Get top 5 results
+
+    const response = await fetch(url);
+    if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`Google Search API Error (${response.status}): ${errorBody}`);
+        throw new Error(`Google Search API failed with status ${response.status}`);
+    }
+    const data = await response.json();
+
+    if (!data.items || data.items.length === 0) {
+        return [];
+    }
+
+    // Process results into a standard format
+    return data.items.map(item => ({
+        title: item.title,
+        link: item.link,
+        snippet: item.snippet,
+    }));
 }
 
 /**
  * Placeholder for Bing Search API call.
  * @param {string} query
  * @param {Environment} env
- * @returns {Promise<object>} // Replace object with actual search result structure
+ * @returns {Promise<Array<{title: string, link: string, snippet: string}>>} Processed search results.
  */
 async function bingSearch(query, env) {
-    // TODO: Implement actual Bing Search API call
-    console.warn(`Placeholder bingSearch called with query: ${query}`);
-    // Example structure (adjust based on actual API response):
-    // const url = `https://api.bing.microsoft.com/v7.0/search?q=${encodeURIComponent(query)}`;
-    // const response = await fetch(url, { headers: { 'Ocp-Apim-Subscription-Key': env.BING_API_KEY } });
-    // if (!response.ok) throw new Error('Bing Search API failed');
-    // const data = await response.json();
-    // return data.webPages.value; // Or process as needed
-    return Promise.resolve({ results: [{ title: "Placeholder Bing Result", link: "http://example.com/bing", snippet: "This is a fallback placeholder." }] });
+    console.log(`Performing Bing Search for: ${query}`);
+    const url = `https://api.bing.microsoft.com/v7.0/search?q=${encodeURIComponent(query)}&count=5`; // Get top 5 results
+
+    const response = await fetch(url, {
+        headers: { 'Ocp-Apim-Subscription-Key': env.BING_API_KEY }
+    });
+
+    if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`Bing Search API Error (${response.status}): ${errorBody}`);
+        throw new Error(`Bing Search API failed with status ${response.status}`);
+    }
+    const data = await response.json();
+
+    if (!data.webPages || !data.webPages.value || data.webPages.value.length === 0) {
+        return [];
+    }
+
+    // Process results into a standard format
+    return data.webPages.value.map(item => ({
+        title: item.name,
+        link: item.url,
+        snippet: item.snippet,
+    }));
 }
 
 /**
@@ -133,11 +160,11 @@ async function setCachedSearch(query, results, env) {
  * Caches results.
  * @param {string} query - The search query.
  * @param {Environment} env - Worker environment.
- * @returns {Promise<object>} Search results.
+ * @returns {Promise<Array<{title: string, link: string, snippet: string}>>} Search results.
  */
 async function searchWithFallback(query, env) {
     // 1. Check cache
-    const cachedResults = await getCachedSearch(query, env);
+    const cachedResults = await getCachedSearch(query, env); // Cache stores the processed array
     if (cachedResults) {
         console.log(`Cache hit for query: ${query}`);
         return cachedResults;
@@ -270,8 +297,8 @@ function levenshteinDistance(s1, s2) {
  * @returns {string | null} The detected command name (without /) or null if no close match.
  */
 function detectCommand(input) {
-    // Add 'newchat' to the list of commands
-    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat']; // Bot commands
+    // Add 'search' to the list of commands
+    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat', 'search']; // Bot commands
     if (!input || !input.startsWith('/')) {
         return null;
     }
@@ -723,10 +750,50 @@ export default {
                         userSettings.history = []; // Clear history
                         await setUserSettings(env, userId, userSettings);
                         await sendMessage(env, chatId, t(lang, 'new_chat_success'));
+						break;
+					}
+                    case 'search': {
+                        const searchQuery = argString.trim();
+                        if (!searchQuery) {
+                            await sendMessage(env, chatId, t(lang, 'search_invalid'));
+                            break;
+                        }
+                        if (!env.GOOGLE_API_KEY || !env.GOOGLE_CX) {
+                             // Only check primary keys here, fallback handles Bing key check
+                            await sendMessage(env, chatId, t(lang, 'search_keys_missing'));
+                            break;
+                        }
+
+                        const thinkingMessage = await sendMessage(env, chatId, t(lang, 'search_thinking'));
+                        if (!thinkingMessage.ok) {
+							console.error("Failed to send 'Searching...' message");
+							await sendMessage(env, chatId, t(lang, 'generic_error'));
+							break;
+						}
+						const thinkingMessageData = await thinkingMessage.json();
+						const thinkingMessageId = thinkingMessageData.result.message_id;
+
+                        try {
+                            const results = await searchWithFallback(searchQuery, env);
+                            let responseText = t(lang, 'search_results_title', { query: searchQuery }) + "\n\n";
+                            if (results && results.length > 0) {
+                                results.forEach((item, index) => {
+                                    responseText += `${index + 1}. *${item.title}*\n[${item.link}](${item.link})\n_${item.snippet}_\n\n`;
+                                });
+                            } else {
+                                responseText = t(lang, 'search_no_results', { query: searchQuery });
+                            }
+                            // Edit the "Searching..." message with the results
+                            await editMessageText(env, chatId, thinkingMessageId, responseText, { disable_web_page_preview: true }); // Disable preview for cleaner look
+
+                        } catch (error) {
+                            console.error('Search command error:', error);
+                            await editMessageText(env, chatId, thinkingMessageId, t(lang, 'search_error'));
+                        }
                         break;
                     }
 					case 'help': {
-						// TODO: Update help text to include /newchat
+						// TODO: Update help text to include /search
 						await sendMessage(env, chatId, t(lang, 'help') + '\n\n' + t(lang, 'current_settings', { model: userSettings.model, systemPrompt: userSettings.systemPrompt }));
 						break;
 					}
