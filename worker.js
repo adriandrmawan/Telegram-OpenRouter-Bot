@@ -478,7 +478,8 @@ async function verifyOpenRouterKey(apiKey) {
 async function checkOpenRouterModel(apiKey, modelId) {
     if (!apiKey) return false; // Cannot check without a key
 	try {
-		const response = await fetch(`${OPENROUTER_API_BASE}/models/${modelId}`, {
+        // URL-encode the model ID in case it contains special characters like ':'
+		const response = await fetch(`${OPENROUTER_API_BASE}/models/${encodeURIComponent(modelId)}`, {
 			headers: { Authorization: `Bearer ${apiKey}` },
 		});
 		return response.ok;
