@@ -78,21 +78,6 @@ Ini adalah bot Telegram yang berfungsi sebagai antarmuka ke model AI yang tersed
     2.  Buat sumber daya "Bing Search v7": Di portal Azure, cari dan buat sumber daya "Bing Search v7". Pilih tingkat harga (seringkali tersedia tingkat gratis).
     3.  Setelah sumber daya di-deploy, buka bagian "Keys and Endpoint". Salin salah satu kunci (Key 1 atau Key 2). Ini adalah `BING_API_KEY` Anda.
 
-**English:**
-
-*   **Google Custom Search API Key & Search Engine ID (CX):**
-    1.  You need a Google Cloud Platform project. Create one or use an existing one at [Google Cloud Console](https://console.cloud.google.com/).
-    2.  Enable the **Custom Search API** for your project: Go to APIs & Services > Library, search for "Custom Search API", and enable it.
-    3.  Create API Credentials: Go to APIs & Services > Credentials, click "Create Credentials", and choose "API key". Copy this key (this is your `GOOGLE_API_KEY`). Restrict the key usage if desired (e.g., to specific IP addresses or HTTP referrers).
-    4.  Create a Programmable Search Engine: Go to the [Programmable Search Engine control panel](https://programmablesearchengine.google.com/controlpanel/all).
-    5.  Click "Add" to create a new search engine. Configure it (e.g., name it, specify "Search the entire web").
-    6.  Once created, find your **Search engine ID** on the setup page. This is your `GOOGLE_CX`.
-
-*   **Bing Search API Key:**
-    1.  You need a Microsoft Azure account. Create one or use an existing one at [Azure Portal](https://portal.azure.com/).
-    2.  Create a "Bing Search v7" resource: In the Azure portal, search for and create a "Bing Search v7" resource. Choose a pricing tier (a free tier is often available).
-    3.  Once the resource is deployed, go to its "Keys and Endpoint" section. Copy one of the keys (Key 1 or Key 2). This is your `BING_API_KEY`.
-
 ## Deployment
 
 ### Opsi 1: Tombol Deploy to Cloudflare
