@@ -1,0 +1,23 @@
+{
+  "start_welcome": "👋 Selamat datang! Untuk menggunakan bot ini, silakan berikan kunci API OpenRouter Anda. Gunakan perintah `/setkey KUNCI_API_ANDA`.",
+  "start_welcome_authorized": "👋 Selamat datang kembali! Anda sudah terotorisasi.\n\nPilih model dengan `/setmodel ID_MODEL` (contoh: `openai/gpt-4o`).\nAtur system prompt kustom dengan `/setsystemprompt PROMPT_ANDA`.\nReset pengaturan dengan `/resetsettings`.\nAjukan pertanyaan dengan `/ask PERTANYAAN_ANDA`.",
+  "key_required": "⚠️ Harap atur kunci API OpenRouter Anda terlebih dahulu menggunakan `/setkey KUNCI_API_ANDA`.",
+  "key_set_success": "✅ Kunci API OpenRouter Anda berhasil disimpan!",
+  "key_set_invalid": "❌ Format perintah tidak valid. Gunakan `/setkey KUNCI_API_ANDA`.",
+  "key_verification_failed": "❌ Verifikasi Kunci API gagal. Silakan periksa kunci Anda dan coba lagi.",
+  "model_select_prompt": "🤖 Silakan pilih model AI menggunakan `/setmodel ID_MODEL` (contoh: `openai/gpt-4o`).\n\nAnda dapat menemukan ID model di situs web OpenRouter.",
+  "model_set_success": "✅ Model default diatur ke: `{model}`",
+  "model_set_invalid": "❌ Format perintah tidak valid. Gunakan `/setmodel ID_MODEL`.",
+  "model_fetch_error": "❌ Tidak dapat memvalidasi ID model dengan OpenRouter. Pastikan ID model benar dan kunci API Anda valid.",
+  "system_prompt_set_success": "✅ System prompt kustom berhasil disimpan.",
+  "system_prompt_set_invalid": "❌ Format perintah tidak valid. Gunakan `/setsystemprompt PROMPT_ANDA`.",
+  "system_prompt_reset_success": "✅ System prompt direset ke default.",
+  "settings_reset_success": "✅ Semua pengaturan Anda (Kunci API, Model, System Prompt) telah direset. Silakan gunakan `/setkey` untuk memulai lagi.",
+  "ask_invalid": "❌ Format perintah tidak valid. Gunakan `/ask PERTANYAAN_ANDA`.",
+  "ask_thinking": "🤔 Sedang berpikir...",
+  "ask_error": "❌ Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi nanti.",
+  "unauthorized": "🚫 Maaf, Anda tidak diizinkan menggunakan bot ini.",
+  "generic_error": "❌ Terjadi kesalahan tak terduga. Silakan hubungi administrator.",
+  "help": "Perintah yang tersedia:\n/start - Mulai bot dan dapatkan instruksi\n/setkey KUNCI_API_ANDA - Simpan kunci API OpenRouter Anda\n/setmodel ID_MODEL - Atur model AI default\n/setsystemprompt PROMPT_ANDA - Atur system prompt kustom (atau kosongkan untuk reset)\n/resetsettings - Hapus semua pengaturan tersimpan Anda\n/ask PERTANYAAN_ANDA - Ajukan pertanyaan ke AI\n/help - Tampilkan pesan bantuan ini",
+  "current_settings": "⚙️ Pengaturan Anda saat ini:\nModel: `{model}`\nSystem Prompt: `{systemPrompt}`"
+}

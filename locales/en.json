@@ -1,0 +1,23 @@
+{
+  "start_welcome": "👋 Welcome! To use this bot, please provide your OpenRouter API key. Use the command `/setkey YOUR_API_KEY`.",
+  "start_welcome_authorized": "👋 Welcome back! You are already authorized.\n\nSelect a model with `/setmodel MODEL_ID` (e.g., `openai/gpt-4o`).\nSet a custom system prompt with `/setsystemprompt YOUR_PROMPT`.\nReset settings with `/resetsettings`.\nAsk questions with `/ask YOUR_QUESTION`.",
+  "key_required": "⚠️ Please set your OpenRouter API key first using `/setkey YOUR_API_KEY`.",
+  "key_set_success": "✅ Your OpenRouter API key has been saved successfully!",
+  "key_set_invalid": "❌ Invalid command format. Use `/setkey YOUR_API_KEY`.",
+  "key_verification_failed": "❌ API Key verification failed. Please check your key and try again.",
+  "model_select_prompt": "🤖 Please select an AI model using `/setmodel MODEL_ID` (e.g., `openai/gpt-4o`).\n\nYou can find model IDs on the OpenRouter website.",
+  "model_set_success": "✅ Default model set to: `{model}`",
+  "model_set_invalid": "❌ Invalid command format. Use `/setmodel MODEL_ID`.",
+  "model_fetch_error": "❌ Could not validate the model ID with OpenRouter. Please ensure the model ID is correct and your API key is valid.",
+  "system_prompt_set_success": "✅ Custom system prompt saved.",
+  "system_prompt_set_invalid": "❌ Invalid command format. Use `/setsystemprompt YOUR_PROMPT`.",
+  "system_prompt_reset_success": "✅ System prompt reset to default.",
+  "settings_reset_success": "✅ All your settings (API Key, Model, System Prompt) have been reset. Please use `/setkey` to start again.",
+  "ask_invalid": "❌ Invalid command format. Use `/ask YOUR_QUESTION`.",
+  "ask_thinking": "🤔 Thinking...",
+  "ask_error": "❌ An error occurred while processing your request. Please try again later.",
+  "unauthorized": "🚫 Sorry, you are not authorized to use this bot.",
+  "generic_error": "❌ An unexpected error occurred. Please contact the administrator.",
+  "help": "Available commands:\n/start - Start the bot and get instructions\n/setkey YOUR_API_KEY - Save your OpenRouter API key\n/setmodel MODEL_ID - Set the default AI model\n/setsystemprompt YOUR_PROMPT - Set a custom system prompt (or leave empty to reset)\n/resetsettings - Clear all your saved settings\n/ask YOUR_QUESTION - Ask the AI a question\n/help - Show this help message",
+  "current_settings": "⚙️ Your current settings:\nModel: `{model}`\nSystem Prompt: `{systemPrompt}`"
+}
