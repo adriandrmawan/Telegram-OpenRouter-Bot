@@ -15,11 +15,20 @@ compatibility_date = "2024-03-20" # Update to a recent date
 [secrets]
 # TELEGRAM_BOT_TOKEN = "" # Your Telegram Bot Token
 # OPENROUTER_API_KEY = "" # Optional: Your own OpenRouter key if the bot needs to make admin calls (e.g., fetch all models dynamically) - User keys are stored in KV
+# GOOGLE_API_KEY = "" # Google Custom Search API Key (Needed for web search)
+# GOOGLE_CX = "" # Google Custom Search Engine ID (Needed for web search)
+# BING_API_KEY = "" # Bing Search API Key (Needed for fallback search)
 
-# KV Namespace Binding
-# Create a KV namespace in your Cloudflare dashboard (Workers & Pages > KV)
-# and add the binding here.
-# [[kv_namespaces]]
-# binding = "USER_DATA" # Name used to access the KV namespace in the worker code
-# id = "<your_kv_namespace_id>" # The ID of your KV namespace
-# preview_id = "<your_kv_namespace_preview_id>" # The Preview ID of your KV namespace
+# KV Namespace Bindings
+# Create KV namespaces in your Cloudflare dashboard (Workers & Pages > KV)
+# and add the bindings here. Replace the placeholder IDs.
+
+[[kv_namespaces]]
+binding = "USER_DATA" # Name used to access the KV namespace in the worker code
+id = "<your_user_data_kv_namespace_id>" # The ID of your USER_DATA KV namespace
+preview_id = "<your_user_data_kv_namespace_preview_id>" # The Preview ID of your USER_DATA KV namespace
+
+[[kv_namespaces]]
+binding = "CACHE" # Name used for caching search results
+id = "<your_cache_kv_namespace_id>" # The ID of your CACHE KV namespace
+preview_id = "<your_cache_kv_namespace_preview_id>" # The Preview ID of your CACHE KV namespace

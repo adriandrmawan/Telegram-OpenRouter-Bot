@@ -10,7 +10,11 @@ import id from './locales/id.json';
  * @property {string} [DEFAULT_MODEL] - Default OpenRouter model ID (Variable)
  * @property {string} [DEFAULT_SYSTEM_PROMPT] - Default system prompt (Variable)
  * @property {KVNamespace} USER_DATA - KV Namespace for storing user settings (Binding)
+ * @property {KVNamespace} CACHE - KV Namespace for caching search results (Binding)
  * @property {string} [OPENROUTER_API_KEY] - Optional: Bot's own OpenRouter key (Secret)
+ * @property {string} [GOOGLE_API_KEY] - Google Search API Key (Secret) - Needed for web search
+ * @property {string} [GOOGLE_CX] - Google Custom Search Engine ID (Secret) - Needed for web search
+ * @property {string} [BING_API_KEY] - Bing Search API Key (Secret) - Needed for fallback search
  */
 
 /**
@@ -25,8 +29,273 @@ import id from './locales/id.json';
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 const OPENROUTER_API_BASE = 'https://openrouter.ai/api/v1';
 const LOCALES = { en, id };
+const CACHE_TTL = 60 * 60 * 4; // 4 hours for search cache
 
 // --- Helper Functions ---
+
+/**
+ * Placeholder for MD5 hashing function.
+ * In a real Cloudflare Worker, you might use the SubtleCrypto API.
+ * For simplicity here, we'll just return the input prefixed.
+ * Replace with a proper implementation if needed.
+ * @param {string} input
+ * @returns {string}
+ */
+function md5Hash(input) {
+    // TODO: Replace with actual MD5 implementation using SubtleCrypto if required
+    // Example: const digest = await crypto.subtle.digest('MD5', new TextEncoder().encode(input));
+    //          return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+    console.warn("Using placeholder md5Hash function.");
+    return `hashed_${input}`;
+}
+
+/**
+ * Placeholder for Google Search API call.
+ * @param {string} query
+ * @param {Environment} env
+ * @returns {Promise<object>} // Replace object with actual search result structure
+ */
+async function googleSearch(query, env) {
+    // TODO: Implement actual Google Custom Search API call
+    console.warn(`Placeholder googleSearch called with query: ${query}`);
+    // Example structure (adjust based on actual API response):
+    // const url = `https://www.googleapis.com/customsearch/v1?key=${env.GOOGLE_API_KEY}&cx=${env.GOOGLE_CX}&q=${encodeURIComponent(query)}`;
+    // const response = await fetch(url);
+    // if (!response.ok) throw new Error('Google Search API failed');
+    // const data = await response.json();
+    // return data.items; // Or process as needed
+    return Promise.resolve({ results: [{ title: "Placeholder Google Result", link: "http://example.com/google", snippet: "This is a placeholder." }] });
+}
+
+/**
+ * Placeholder for Bing Search API call.
+ * @param {string} query
+ * @param {Environment} env
+ * @returns {Promise<object>} // Replace object with actual search result structure
+ */
+async function bingSearch(query, env) {
+    // TODO: Implement actual Bing Search API call
+    console.warn(`Placeholder bingSearch called with query: ${query}`);
+    // Example structure (adjust based on actual API response):
+    // const url = `https://api.bing.microsoft.com/v7.0/search?q=${encodeURIComponent(query)}`;
+    // const response = await fetch(url, { headers: { 'Ocp-Apim-Subscription-Key': env.BING_API_KEY } });
+    // if (!response.ok) throw new Error('Bing Search API failed');
+    // const data = await response.json();
+    // return data.webPages.value; // Or process as needed
+    return Promise.resolve({ results: [{ title: "Placeholder Bing Result", link: "http://example.com/bing", snippet: "This is a fallback placeholder." }] });
+}
+
+/**
+ * Retrieves cached search results if available and not expired.
+ * @param {string} query - The search query.
+ * @param {Environment} env - Worker environment.
+ * @returns {Promise<object | null>} Cached results or null.
+ */
+async function getCachedSearch(query, env) {
+    if (!env.CACHE) {
+        console.warn("CACHE KV namespace not bound. Skipping cache check.");
+        return null;
+    }
+    const cacheKey = `search:${md5Hash(query)}`;
+    try {
+        const cached = await env.CACHE.get(cacheKey, { type: 'json' });
+        return cached; // Returns the parsed JSON object or null if not found/expired
+    } catch (e) {
+        console.error(`Cache get error for key ${cacheKey}:`, e);
+        return null;
+    }
+}
+
+/**
+ * Stores search results in the cache.
+ * @param {string} query - The search query.
+ * @param {object} results - The search results object to cache.
+ * @param {Environment} env - Worker environment.
+ * @returns {Promise<void>}
+ */
+async function setCachedSearch(query, results, env) {
+    if (!env.CACHE) {
+        console.warn("CACHE KV namespace not bound. Skipping cache set.");
+        return;
+    }
+    const cacheKey = `search:${md5Hash(query)}`;
+    try {
+        await env.CACHE.put(cacheKey, JSON.stringify(results), { expirationTtl: CACHE_TTL });
+    } catch (e) {
+        console.error(`Cache put error for key ${cacheKey}:`, e);
+    }
+}
+
+
+/**
+ * Performs a web search, attempting Google first and falling back to Bing.
+ * Caches results.
+ * @param {string} query - The search query.
+ * @param {Environment} env - Worker environment.
+ * @returns {Promise<object>} Search results.
+ */
+async function searchWithFallback(query, env) {
+    // 1. Check cache
+    const cachedResults = await getCachedSearch(query, env);
+    if (cachedResults) {
+        console.log(`Cache hit for query: ${query}`);
+        return cachedResults;
+    }
+    console.log(`Cache miss for query: ${query}`);
+
+    // 2. Try primary provider (Google)
+    try {
+        if (!env.GOOGLE_API_KEY || !env.GOOGLE_CX) {
+            throw new Error("Google API Key or CX not configured.");
+        }
+        const googleResults = await googleSearch(query, env);
+        // Cache the successful Google result
+        await setCachedSearch(query, googleResults, env);
+        return googleResults;
+    } catch (error) {
+        console.warn('Google Search failed:', error.message);
+        // 3. Try fallback provider (Bing)
+        try {
+            if (!env.BING_API_KEY) {
+                throw new Error("Bing API Key not configured for fallback.");
+            }
+            console.log('Attempting Bing search as fallback...');
+            const bingResults = await bingSearch(query, env);
+            // Cache the successful Bing result
+            await setCachedSearch(query, bingResults, env);
+            return bingResults;
+        } catch (fallbackError) {
+            console.error('Fallback Bing Search also failed:', fallbackError.message);
+            throw new Error('Both primary and fallback search providers failed.'); // Re-throw or return a specific error object
+        }
+    }
+}
+
+/**
+ * Migrates user data from an old key format/structure to a new one.
+ * Example: Adds a default model setting.
+ * NOTE: This function needs to be triggered manually during a migration process.
+ * @param {string} oldKey - The old KV key (e.g., `user_${userId}`).
+ * @param {string} newKey - The new KV key (could be the same if only structure changes).
+ * @param {Environment} env - Worker environment.
+ * @returns {Promise<void>}
+ */
+async function migrateUserData(oldKey, newKey, env) {
+    try {
+        const oldDataString = await env.USER_DATA.get(oldKey);
+        if (!oldDataString) {
+            console.log(`No old data found for key: ${oldKey}. Skipping migration.`);
+            return;
+        }
+
+        let oldData;
+        try {
+            oldData = JSON.parse(oldDataString);
+        } catch (parseError) {
+            console.error(`Failed to parse old data for key ${oldKey}:`, parseError);
+            // Decide how to handle corrupted data: skip, delete, log?
+            // For now, we'll skip.
+            return;
+        }
+
+        // --- Transformation Logic ---
+        // Example: Add a default model if missing
+        const newData = {
+            ...oldData, // Keep existing data
+            settings: {
+                ...(oldData.settings || {}), // Keep existing settings
+                model: oldData.settings?.model || "anthropic/claude-3-sonnet", // Add default model if missing
+                // Add other new fields or transformations here
+            },
+            // Example: Rename a field
+            // preferredLanguage: oldData.language,
+            // language: undefined, // Remove old field if renamed
+        };
+        // --- End Transformation Logic ---
+
+        // Validate newData structure if necessary
+
+        await env.USER_DATA.put(newKey, JSON.stringify(newData));
+        console.log(`Successfully migrated data from ${oldKey} to ${newKey}`);
+
+        // Optionally delete the old key *after* successful write
+        // Be cautious with deletion, ensure migration is correct first.
+        // if (oldKey !== newKey) {
+        //   await env.USER_DATA.delete(oldKey);
+        //   console.log(`Deleted old key: ${oldKey}`);
+        // }
+
+    } catch (error) {
+        console.error(`Error migrating user data for key ${oldKey}:`, error);
+        // Consider logging this error externally or implementing retry logic
+    }
+}
+
+/**
+ * Calculates the Levenshtein distance between two strings.
+ * @param {string} s1 First string.
+ * @param {string} s2 Second string.
+ * @returns {number} The Levenshtein distance.
+ */
+function levenshteinDistance(s1, s2) {
+  s1 = s1.toLowerCase();
+  s2 = s2.toLowerCase();
+
+  const costs = [];
+  for (let i = 0; i <= s1.length; i++) {
+    let lastValue = i;
+    for (let j = 0; j <= s2.length; j++) {
+      if (i === 0) {
+        costs[j] = j;
+      } else {
+        if (j > 0) {
+          let newValue = costs[j - 1];
+          if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+          }
+          costs[j - 1] = lastValue;
+          lastValue = newValue;
+        }
+      }
+    }
+    if (i > 0) costs[s2.length] = lastValue;
+  }
+  return costs[s2.length];
+}
+
+/**
+ * Detects the intended command, allowing for typos (max distance 2).
+ * @param {string} input - The user's input text (potentially starting with /).
+ * @returns {string | null} The detected command name (without /) or null if no close match.
+ */
+function detectCommand(input) {
+    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help']; // Bot commands
+    if (!input || !input.startsWith('/')) {
+        return null;
+    }
+    const inputCmd = input.split(' ')[0].substring(1).toLowerCase(); // Get command part, remove /, lowercase
+    if (!inputCmd) return null; // Handle case like just "/"
+
+    // Exact match first
+    if (commands.includes(inputCmd)) {
+        return inputCmd;
+    }
+
+    // Check Levenshtein distance
+    let bestMatch = null;
+    let minDistance = 3; // Allow distance up to 2 (threshold)
+
+    for (const cmd of commands) {
+        const distance = levenshteinDistance(cmd, inputCmd);
+        if (distance < minDistance) {
+            minDistance = distance;
+            bestMatch = cmd;
+        }
+    }
+    // Only return if the match is reasonably close (distance <= 2)
+    return minDistance <= 2 ? bestMatch : null;
+}
+
 
 /**
  * Gets the appropriate translation string.
@@ -330,12 +599,14 @@ export default {
 			const lang = userSettings.language; // Use user's preferred language
 
 			// --- Command Handling ---
-			if (text.startsWith('/')) {
-				const [command, ...args] = text.split(' ');
-				const argString = args.join(' ');
+			const detectedCommand = detectCommand(text); // Use typo detection
 
-				switch (command) {
-					case '/start': {
+			if (detectedCommand) {
+				const commandArgs = text.split(' ').slice(1); // Get arguments after the command
+                const argString = commandArgs.join(' ');
+
+				switch (detectedCommand) { // Switch on the detected command name
+					case 'start': {
 						if (userSettings.apiKey) {
 							await sendMessage(env, chatId, t(lang, 'start_welcome_authorized') + '\n\n' + t(lang, 'current_settings', { model: userSettings.model, systemPrompt: userSettings.systemPrompt }));
 						} else {
@@ -343,7 +614,7 @@ export default {
 						}
 						break;
 					}
-					case '/setkey': {
+					case 'setkey': {
 						const apiKey = argString.trim();
 						if (!apiKey) {
 							await sendMessage(env, chatId, t(lang, 'key_set_invalid'));
@@ -359,7 +630,7 @@ export default {
 						}
 						break;
 					}
-					case '/setmodel': {
+					case 'setmodel': {
 						if (!userSettings.apiKey) {
                             await sendMessage(env, chatId, t(lang, 'key_required'));
                             break;
@@ -380,7 +651,7 @@ export default {
 						}
 						break;
 					}
-					case '/setsystemprompt': {
+					case 'setsystemprompt': {
 						const prompt = argString.trim();
 						if (prompt) {
 							userSettings.systemPrompt = prompt;
@@ -394,7 +665,7 @@ export default {
 						}
 						break;
 					}
-					case '/resetsettings': {
+					case 'resetsettings': {
 						// Clear specific fields instead of deleting the whole user object
 						// to preserve language preference if set separately later.
 						const newSettings = { language: userSettings.language }; // Keep language
@@ -402,7 +673,7 @@ export default {
 						await sendMessage(env, chatId, t(lang, 'settings_reset_success'));
 						break;
 					}
-					case '/ask': {
+					case 'ask': {
 						const question = argString.trim();
 						if (!question) {
 							await sendMessage(env, chatId, t(lang, 'ask_invalid'));
@@ -426,20 +697,22 @@ export default {
 						ctx.waitUntil(streamChatCompletion(env, chatId, thinkingMessageId, userSettings, question));
 						break;
 					}
-					case '/help': {
+					case 'help': {
 						await sendMessage(env, chatId, t(lang, 'help') + '\n\n' + t(lang, 'current_settings', { model: userSettings.model, systemPrompt: userSettings.systemPrompt }));
 						break;
 					}
-					// Add other commands like /setlang if needed
+					// Add other commands here if needed
 					default:
-						await sendMessage(env, chatId, t(lang, 'help')); // Show help for unknown commands
+						// This case should ideally not be reached if detectCommand works correctly
+						// but as a fallback, show help.
+						await sendMessage(env, chatId, t(lang, 'help'));
 						break;
 				}
-			} else {
-				// Handle non-command messages (optional: could treat as /ask)
-				// For now, just ignore or show help
-				// await sendMessage(env, chatId, t(lang, 'help'));
-			}
+			} else if (text.startsWith('/')) {
+                // If it starts with / but wasn't detected (e.g., too many typos or unknown command)
+                await sendMessage(env, chatId, t(lang, 'help'));
+            }
+            // Ignore non-command messages otherwise
 
 			return new Response('OK'); // Acknowledge the update
 		} catch (error) {
