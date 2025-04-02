@@ -479,9 +479,17 @@ async function checkOpenRouterModel(apiKey, modelId) {
     if (!apiKey) return false; // Cannot check without a key
 	try {
         // URL-encode the model ID in case it contains special characters like ':'
-		const response = await fetch(`${OPENROUTER_API_BASE}/models/${encodeURIComponent(modelId)}`, {
+        const encodedModelId = encodeURIComponent(modelId);
+        const checkUrl = `${OPENROUTER_API_BASE}/models/${encodedModelId}`;
+        console.log(`Checking model URL: ${checkUrl}`); // Log the URL being checked
+		const response = await fetch(checkUrl, {
 			headers: { Authorization: `Bearer ${apiKey}` },
 		});
+        console.log(`Model check response status for ${modelId}: ${response.status}`); // Log status
+        if (!response.ok) {
+            const errorBody = await response.text().catch(() => 'Could not read error body');
+            console.error(`Model check failed for ${modelId}: ${errorBody}`); // Log error body if possible
+        }
 		return response.ok;
 	} catch (error) {
 		console.error(`Error checking OpenRouter model ${modelId}:`, error);
@@ -512,6 +520,7 @@ async function getOpenRouterModels(apiKey) {
         const data = await response.json();
         // Assuming the models are in the 'data' array based on typical API structures
         // Adjust if the actual OpenRouter API response structure is different
+        console.log(`Fetched ${data?.data?.length || 0} models from OpenRouter.`); // Log count
         return data.data || [];
     } catch (error) {
         console.error('Error fetching OpenRouter models:', error);
@@ -836,26 +845,63 @@ export default {
                             await sendMessage(env, chatId, t(lang, 'key_required'));
                             break;
                         }
-                        await sendMessage(env, chatId, t(lang, 'models_list_fetching'));
+                        const fetchingMsg = await sendMessage(env, chatId, t(lang, 'models_list_fetching'));
+                        const fetchingMsgId = fetchingMsg.ok ? (await fetchingMsg.json()).result.message_id : null;
+
                         try {
                             const models = await getOpenRouterModels(userSettings.apiKey);
                             if (models && models.length > 0) {
-                                // Format the list - potentially long, consider pagination or sending in chunks if needed
-                                let modelListText = t(lang, 'models_list_title') + "\n\n";
+                                let modelListChunks = [];
+                                let currentChunk = t(lang, 'models_list_title') + "\n\n";
+                                const MAX_CHUNK_LENGTH = 4000; // Leave some buffer
+
                                 models.forEach(model => {
-                                    // Use backticks for model IDs to allow easy copying on Telegram
-                                    modelListText += `- \`${model.id}\` (${model.name || 'No name provided'})\n`;
+                                    const modelLine = `- \`${model.id}\` (${model.name || 'No name provided'})\n`;
+                                    if (currentChunk.length + modelLine.length > MAX_CHUNK_LENGTH) {
+                                        modelListChunks.push(currentChunk);
+                                        currentChunk = modelLine; // Start new chunk
+                                    } else {
+                                        currentChunk += modelLine;
+                                    }
                                 });
-                                // Telegram messages have a size limit (4096 chars). If the list is very long, this might fail.
-                                // A more robust solution might involve pagination or sending multiple messages.
-                                // For now, send as one message.
-                                await sendMessage(env, chatId, modelListText);
+                                modelListChunks.push(currentChunk); // Add the last chunk
+
+                                // Delete "Fetching..." message if possible
+                                if (fetchingMsgId) {
+                                    // Use waitUntil to allow deletion after response is sent
+                                    ctx.waitUntil(fetch(`${TELEGRAM_API_BASE}${env.TELEGRAM_BOT_TOKEN}/deleteMessage`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ chat_id: chatId, message_id: fetchingMsgId }),
+                                    }).catch(e => console.error("Failed to delete 'Fetching...' message:", e)));
+                                }
+
+                                // Send chunks
+                                for (let i = 0; i < modelListChunks.length; i++) {
+                                    await sendMessage(env, chatId, modelListChunks[i]);
+                                    if (i < modelListChunks.length - 1) {
+                                        // Optional delay between chunks if needed
+                                        await new Promise(resolve => setTimeout(resolve, 300));
+                                    }
+                                }
                             } else {
-                                await sendMessage(env, chatId, t(lang, 'models_list_error')); // Or a specific "no models found" message
+                                // Edit "Fetching..." to error message if possible, otherwise send new message
+                                const errorText = t(lang, 'models_list_error_nodata'); // Use a specific "no data" message
+                                if (fetchingMsgId) {
+                                    await editMessageText(env, chatId, fetchingMsgId, errorText);
+                                } else {
+                                    await sendMessage(env, chatId, errorText);
+                                }
                             }
                         } catch (error) {
                             console.error('Error handling /listmodels:', error);
-                            await sendMessage(env, chatId, t(lang, 'models_list_error'));
+                             // Edit "Fetching..." to error message if possible, otherwise send new message
+                            const errorText = t(lang, 'models_list_error_generic'); // Use a generic error message
+                            if (fetchingMsgId) {
+                                await editMessageText(env, chatId, fetchingMsgId, errorText);
+                            } else {
+                                await sendMessage(env, chatId, errorText);
+                            }
                         }
 						break;
 					}
