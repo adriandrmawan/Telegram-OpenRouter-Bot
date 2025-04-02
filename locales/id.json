@@ -31,6 +31,8 @@
   "lang_set_success": "✅ Bahasa diatur ke {lang}.",
   "lang_set_format": "❌ Format perintah tidak valid. Gunakan `/setlang en` atau `/setlang id`.",
   "lang_set_invalid": "❌ Kode bahasa tidak valid. Silakan gunakan `en` untuk Bahasa Inggris atau `id` untuk Bahasa Indonesia.",
-  "help": "Perintah yang tersedia:\n/start - Mulai bot dan dapatkan instruksi\n/setkey KUNCI_API_ANDA - Simpan kunci API OpenRouter Anda\n/setmodel ID_MODEL - Atur model AI default\n/listmodels - Tampilkan daftar model AI yang tersedia\n/setsystemprompt PROMPT_ANDA - Atur system prompt kustom (atau kosongkan untuk reset)\n/setlang <en|id> - Atur bahasa pilihan Anda\n/resetsettings - Hapus semua pengaturan tersimpan Anda\n/ask PERTANYAAN_ANDA - Ajukan pertanyaan ke AI (mengingat riwayat percakapan)\n/newchat - Hapus riwayat percakapan dan mulai baru\n/search KUERI_ANDA - Lakukan pencarian web\n/help - Tampilkan pesan bantuan ini",
+  "persona_set_success": "✅ Persona diatur ke: {persona}. System prompt telah diperbarui.",
+  "persona_set_invalid": "❌ Nama persona tidak valid. Gunakan `/setpersona <nama>`. Persona yang tersedia: {personas}",
+  "help": "Perintah yang tersedia:\n/start - Mulai bot dan dapatkan instruksi\n/setkey KUNCI_API_ANDA - Simpan kunci API OpenRouter Anda\n/setmodel ID_MODEL - Atur model AI default\n/listmodels - Tampilkan daftar model AI yang tersedia\n/setsystemprompt PROMPT_ANDA - Atur system prompt kustom (atau kosongkan untuk reset)\n/setpersona <nama> - Atur persona/system prompt yang telah ditentukan (misalnya, coder, translator)\n/setlang <en|id> - Atur bahasa pilihan Anda\n/resetsettings - Hapus semua pengaturan tersimpan Anda\n/ask PERTANYAAN_ANDA - Ajukan pertanyaan ke AI (mengingat riwayat percakapan)\n/newchat - Hapus riwayat percakapan dan mulai baru\n/search KUERI_ANDA - Lakukan pencarian web\n/help - Tampilkan pesan bantuan ini",
   "current_settings": "⚙️ Pengaturan Anda saat ini:\nModel: `{model}`\nSystem Prompt: `{systemPrompt}`"
 }

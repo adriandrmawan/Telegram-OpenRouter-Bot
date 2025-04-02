@@ -32,6 +32,14 @@ const OPENROUTER_API_BASE = 'https://openrouter.ai/api/v1';
 const LOCALES = { en, id };
 const CACHE_TTL = 60 * 60 * 4; // 4 hours for search cache
 
+// --- Predefined Personas ---
+const PERSONAS = {
+    default: 'You are a helpful assistant.',
+    coder: 'You are an expert programmer. Provide code examples and explain technical concepts clearly.',
+    translator: 'You are a multilingual translator. Translate the given text accurately.',
+    summarizer: 'You are an expert summarizer. Provide concise summaries of the given text.',
+};
+
 // --- Helper Functions ---
 
 /**
@@ -297,8 +305,8 @@ function levenshteinDistance(s1, s2) {
  * @returns {string | null} The detected command name (without /) or null if no close match.
  */
 function detectCommand(input) {
-    // Add 'setlang' to the list of commands
-    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat', 'search', 'listmodels', 'setlang']; // Bot commands
+    // Add 'setpersona' to the list of commands
+    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat', 'search', 'listmodels', 'setlang', 'setpersona']; // Bot commands
     if (!input || !input.startsWith('/')) {
         return null;
     }
@@ -863,10 +871,24 @@ export default {
                          else {
                             await sendMessage(env, chatId, t(lang, 'lang_set_invalid')); // Use current language for invalid code error
                         }
+						break;
+					}
+                    case 'setpersona': {
+                        const personaName = argString.trim().toLowerCase();
+                        const availablePersonas = Object.keys(PERSONAS);
+
+                        if (personaName && PERSONAS[personaName]) {
+                            userSettings.systemPrompt = PERSONAS[personaName];
+                            await setUserSettings(env, userId, userSettings);
+                            await sendMessage(env, chatId, t(lang, 'persona_set_success', { persona: personaName }));
+                        } else {
+                            // Send error message listing available personas
+                            await sendMessage(env, chatId, t(lang, 'persona_set_invalid', { personas: availablePersonas.join(', ') }));
+                        }
                         break;
                     }
 					case 'help': {
-						// TODO: Update help text to include /setlang
+						// TODO: Update help text to include /setpersona
 						await sendMessage(env, chatId, t(lang, 'help') + '\n\n' + t(lang, 'current_settings', { model: userSettings.model, systemPrompt: userSettings.systemPrompt }));
 						break;
 					}

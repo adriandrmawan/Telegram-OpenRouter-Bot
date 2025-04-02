@@ -118,6 +118,7 @@ Interact with your bot on Telegram:
 *   `/setmodel MODEL_ID`: Sets your preferred AI model (e.g., `/setmodel openai/gpt-4o`).
 *   `/listmodels`: Lists available models from OpenRouter that you can use with `/setmodel`. Requires a valid API key to be set.
 *   `/setsystemprompt YOUR_PROMPT`: Sets a custom system prompt for the AI. Leave the prompt empty (`/setsystemprompt`) to reset to the default.
+*   `/setpersona <name>`: Sets a predefined persona (which is a specific system prompt). Example personas: `default`, `coder`, `translator`, `summarizer`. Overwrites custom system prompt.
 *   `/setlang <en|id>`: Sets your preferred language for bot responses (English or Indonesian).
 *   `/resetsettings`: Clears your stored API key, model, and system prompt.
 *   `/ask YOUR_QUESTION`: Asks the configured AI model a question. The bot remembers the last few messages in the conversation. The response will be streamed.
