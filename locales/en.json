@@ -28,6 +28,9 @@
   "models_list_fetching": "⏳ Fetching available models...",
   "models_list_title": "🤖 Available Models:",
   "models_list_error": "❌ Could not fetch the list of models. Please ensure your API key is correct and try again.",
-  "help": "Available commands:\n/start - Start the bot and get instructions\n/setkey YOUR_API_KEY - Save your OpenRouter API key\n/setmodel MODEL_ID - Set the default AI model\n/listmodels - List available AI models\n/setsystemprompt YOUR_PROMPT - Set a custom system prompt (or leave empty to reset)\n/resetsettings - Clear all your saved settings\n/ask YOUR_QUESTION - Ask the AI a question (remembers conversation history)\n/newchat - Clear the conversation history and start fresh\n/search YOUR_QUERY - Perform a web search\n/help - Show this help message",
+  "lang_set_success": "✅ Language set to {lang}.",
+  "lang_set_format": "❌ Invalid command format. Use `/setlang en` or `/setlang id`.",
+  "lang_set_invalid": "❌ Invalid language code. Please use `en` for English or `id` for Bahasa Indonesia.",
+  "help": "Available commands:\n/start - Start the bot and get instructions\n/setkey YOUR_API_KEY - Save your OpenRouter API key\n/setmodel MODEL_ID - Set the default AI model\n/listmodels - List available AI models\n/setsystemprompt YOUR_PROMPT - Set a custom system prompt (or leave empty to reset)\n/setlang <en|id> - Set your preferred language\n/resetsettings - Clear all your saved settings\n/ask YOUR_QUESTION - Ask the AI a question (remembers conversation history)\n/newchat - Clear the conversation history and start fresh\n/search YOUR_QUERY - Perform a web search\n/help - Show this help message",
   "current_settings": "⚙️ Your current settings:\nModel: `{model}`\nSystem Prompt: `{systemPrompt}`"
 }

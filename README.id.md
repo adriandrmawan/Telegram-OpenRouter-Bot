@@ -118,6 +118,7 @@ Berinteraksi dengan bot Anda di Telegram:
 *   `/setmodel ID_MODEL`: Mengatur model AI pilihan Anda (misalnya, `/setmodel openai/gpt-4o`).
 *   `/listmodels`: Menampilkan daftar model yang tersedia dari OpenRouter yang dapat Anda gunakan dengan `/setmodel`. Memerlukan kunci API yang valid untuk diatur.
 *   `/setsystemprompt PROMPT_ANDA`: Mengatur prompt sistem kustom untuk AI. Biarkan prompt kosong (`/setsystemprompt`) untuk mereset ke default.
+*   `/setlang <en|id>`: Mengatur bahasa pilihan Anda untuk respons bot (Bahasa Inggris atau Bahasa Indonesia).
 *   `/resetsettings`: Menghapus kunci API, model, dan prompt sistem yang tersimpan.
 *   `/ask PERTANYAAN_ANDA`: Mengajukan pertanyaan ke model AI yang dikonfigurasi. Bot mengingat beberapa pesan terakhir dalam percakapan. Respons akan di-stream.
 *   `/newchat`: Menghapus memori bot tentang riwayat percakapan saat ini, memulai obrolan baru.

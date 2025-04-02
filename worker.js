@@ -297,8 +297,8 @@ function levenshteinDistance(s1, s2) {
  * @returns {string | null} The detected command name (without /) or null if no close match.
  */
 function detectCommand(input) {
-    // Add 'listmodels' to the list of commands
-    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat', 'search', 'listmodels']; // Bot commands
+    // Add 'setlang' to the list of commands
+    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat', 'search', 'listmodels', 'setlang']; // Bot commands
     if (!input || !input.startsWith('/')) {
         return null;
     }
@@ -848,10 +848,25 @@ export default {
                             console.error('Error handling /listmodels:', error);
                             await sendMessage(env, chatId, t(lang, 'models_list_error'));
                         }
+						break;
+					}
+                    case 'setlang': {
+                        const targetLang = argString.trim().toLowerCase();
+                        if (targetLang === 'en' || targetLang === 'id') {
+                            userSettings.language = targetLang;
+                            await setUserSettings(env, userId, userSettings);
+                            // Send confirmation in the *new* language
+                            await sendMessage(env, chatId, t(targetLang, 'lang_set_success', { lang: targetLang === 'en' ? 'English' : 'Bahasa Indonesia' }));
+                        } else if (!targetLang) {
+                             await sendMessage(env, chatId, t(lang, 'lang_set_format')); // Use current language for format error
+                        }
+                         else {
+                            await sendMessage(env, chatId, t(lang, 'lang_set_invalid')); // Use current language for invalid code error
+                        }
                         break;
                     }
 					case 'help': {
-						// TODO: Update help text to include /listmodels
+						// TODO: Update help text to include /setlang
 						await sendMessage(env, chatId, t(lang, 'help') + '\n\n' + t(lang, 'current_settings', { model: userSettings.model, systemPrompt: userSettings.systemPrompt }));
 						break;
 					}
