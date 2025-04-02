@@ -18,6 +18,7 @@
   "ask_error": "❌ Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi nanti.",
   "unauthorized": "🚫 Maaf, Anda tidak diizinkan menggunakan bot ini.",
   "generic_error": "❌ Terjadi kesalahan tak terduga. Silakan hubungi administrator.",
-  "help": "Perintah yang tersedia:\n/start - Mulai bot dan dapatkan instruksi\n/setkey KUNCI_API_ANDA - Simpan kunci API OpenRouter Anda\n/setmodel ID_MODEL - Atur model AI default\n/setsystemprompt PROMPT_ANDA - Atur system prompt kustom (atau kosongkan untuk reset)\n/resetsettings - Hapus semua pengaturan tersimpan Anda\n/ask PERTANYAAN_ANDA - Ajukan pertanyaan ke AI\n/help - Tampilkan pesan bantuan ini",
+  "new_chat_success": "✅ Riwayat percakapan dihapus. Memulai obrolan baru.",
+  "help": "Perintah yang tersedia:\n/start - Mulai bot dan dapatkan instruksi\n/setkey KUNCI_API_ANDA - Simpan kunci API OpenRouter Anda\n/setmodel ID_MODEL - Atur model AI default\n/setsystemprompt PROMPT_ANDA - Atur system prompt kustom (atau kosongkan untuk reset)\n/resetsettings - Hapus semua pengaturan tersimpan Anda\n/ask PERTANYAAN_ANDA - Ajukan pertanyaan ke AI (mengingat riwayat percakapan)\n/newchat - Hapus riwayat percakapan dan mulai baru\n/help - Tampilkan pesan bantuan ini",
   "current_settings": "⚙️ Pengaturan Anda saat ini:\nModel: `{model}`\nSystem Prompt: `{systemPrompt}`"
 }

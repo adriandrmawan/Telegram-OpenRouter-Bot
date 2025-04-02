@@ -118,7 +118,8 @@ Interact with your bot on Telegram:
 *   `/setmodel MODEL_ID`: Sets your preferred AI model (e.g., `/setmodel openai/gpt-4o`). Find model IDs on [OpenRouter.ai](https://openrouter.ai/models).
 *   `/setsystemprompt YOUR_PROMPT`: Sets a custom system prompt for the AI. Leave the prompt empty (`/setsystemprompt`) to reset to the default.
 *   `/resetsettings`: Clears your stored API key, model, and system prompt.
-*   `/ask YOUR_QUESTION`: Asks the configured AI model a question. The response will be streamed.
+*   `/ask YOUR_QUESTION`: Asks the configured AI model a question. The bot remembers the last few messages in the conversation. The response will be streamed.
+*   `/newchat`: Clears the bot's memory of the current conversation history, starting a fresh chat.
 *   `/help`: Shows the list of available commands and current settings.
 
 Enjoy your AI assistant on Telegram!

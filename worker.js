@@ -23,6 +23,7 @@ import id from './locales/id.json';
  * @property {string} [model] - User's selected model ID
  * @property {string} [systemPrompt] - User's custom system prompt
  * @property {string} [language] - User's preferred language ('en' or 'id')
+ * @property {Array<{role: 'user' | 'assistant', content: string}>} [history] - Conversation history
  */
 
 // --- Constants ---
@@ -269,7 +270,8 @@ function levenshteinDistance(s1, s2) {
  * @returns {string | null} The detected command name (without /) or null if no close match.
  */
 function detectCommand(input) {
-    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help']; // Bot commands
+    // Add 'newchat' to the list of commands
+    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat']; // Bot commands
     if (!input || !input.startsWith('/')) {
         return null;
     }
@@ -372,10 +374,13 @@ async function getUserSettings(env, userId) {
 		language: env.DEFAULT_LANGUAGE === 'id' ? 'id' : 'en',
 		model: env.DEFAULT_MODEL || 'openai/gpt-3.5-turbo',
 		systemPrompt: env.DEFAULT_SYSTEM_PROMPT || 'You are a helpful assistant.',
+		history: [], // Initialize history
 	};
 	try {
 		const storedSettings = await env.USER_DATA.get(`user_${userId}`, { type: 'json' });
-		return { ...defaultSettings, ...storedSettings };
+		// Ensure history is always an array, even if stored data is old/malformed
+		const history = Array.isArray(storedSettings?.history) ? storedSettings.history : [];
+		return { ...defaultSettings, ...storedSettings, history };
 	} catch (e) {
 		console.error(`KV get error for user ${userId}:`, e);
 		return defaultSettings; // Return defaults if KV fails
@@ -454,12 +459,14 @@ async function checkOpenRouterModel(apiKey, modelId) {
  * @param {Environment} env - Worker environment.
  * @param {number} chatId - Telegram chat ID.
  * @param {number} messageId - Telegram message ID of the "Thinking..." message.
- * @param {UserSettings} settings - User settings including API key, model, and system prompt.
+ * @param {UserSettings} settings - User settings including API key, model, system prompt, and history.
  * @param {string} userPrompt - The user's question/prompt.
+ * @param {number} userId - The user's ID to save settings back.
  */
-async function streamChatCompletion(env, chatId, messageId, settings, userPrompt) {
-	const { apiKey, model, systemPrompt } = settings;
+async function streamChatCompletion(env, chatId, messageId, settings, userPrompt, userId) {
+	const { apiKey, model, systemPrompt, history = [] } = settings; // Default history to empty array
 	const lang = settings.language || 'en';
+	const MAX_HISTORY_MESSAGES = 6; // Keep last 3 user/assistant pairs
 
 	if (!apiKey) {
 		await editMessageText(env, chatId, messageId, t(lang, 'key_required'));
@@ -473,12 +480,14 @@ async function streamChatCompletion(env, chatId, messageId, settings, userPrompt
 				'Authorization': `Bearer ${apiKey}`,
 				'Content-Type': 'application/json',
 				'HTTP-Referer': 'https://github.com/username/telegram-openrouter-bot', // Replace with your repo URL
-            	'X-Title': 'Telegram OpenRouter Bot', // Replace with your bot name
+				'X-Title': 'Telegram OpenRouter Bot', // Replace with your bot name
 			},
 			body: JSON.stringify({
 				model: model,
 				messages: [
 					{ role: 'system', content: systemPrompt },
+                    // Include truncated history
+                    ...history.slice(-MAX_HISTORY_MESSAGES),
 					{ role: 'user', content: userPrompt },
 				],
 				stream: true,
@@ -544,8 +553,21 @@ async function streamChatCompletion(env, chatId, messageId, settings, userPrompt
 		}
 
 		// Final update with the complete message
-		if (currentMessage.trim()) {
-			await editMessageText(env, chatId, messageId, currentMessage);
+        const finalMessage = currentMessage.trim();
+		if (finalMessage) {
+			await editMessageText(env, chatId, messageId, finalMessage);
+
+            // Add user prompt and assistant response to history
+            const newHistory = [
+                ...history,
+                { role: 'user', content: userPrompt },
+                { role: 'assistant', content: finalMessage }
+            ].slice(-MAX_HISTORY_MESSAGES); // Keep history truncated
+
+            // Save updated settings with new history
+            const updatedSettings = { ...settings, history: newHistory };
+            await setUserSettings(env, userId, updatedSettings);
+
 		} else {
 			// Handle cases where the stream finished but no content was generated
 			await editMessageText(env, chatId, messageId, t(lang, 'ask_error') + " (No content received)");
@@ -693,11 +715,18 @@ export default {
 						const thinkingMessageData = await thinkingMessage.json();
 						const thinkingMessageId = thinkingMessageData.result.message_id;
 
-						// Start streaming in the background
-						ctx.waitUntil(streamChatCompletion(env, chatId, thinkingMessageId, userSettings, question));
+						// Start streaming in the background, passing userId to save history
+						ctx.waitUntil(streamChatCompletion(env, chatId, thinkingMessageId, userSettings, question, userId));
 						break;
 					}
+                    case 'newchat': {
+                        userSettings.history = []; // Clear history
+                        await setUserSettings(env, userId, userSettings);
+                        await sendMessage(env, chatId, t(lang, 'new_chat_success'));
+                        break;
+                    }
 					case 'help': {
+						// TODO: Update help text to include /newchat
 						await sendMessage(env, chatId, t(lang, 'help') + '\n\n' + t(lang, 'current_settings', { model: userSettings.model, systemPrompt: userSettings.systemPrompt }));
 						break;
 					}

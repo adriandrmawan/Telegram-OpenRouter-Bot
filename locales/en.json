@@ -18,6 +18,7 @@
   "ask_error": "❌ An error occurred while processing your request. Please try again later.",
   "unauthorized": "🚫 Sorry, you are not authorized to use this bot.",
   "generic_error": "❌ An unexpected error occurred. Please contact the administrator.",
-  "help": "Available commands:\n/start - Start the bot and get instructions\n/setkey YOUR_API_KEY - Save your OpenRouter API key\n/setmodel MODEL_ID - Set the default AI model\n/setsystemprompt YOUR_PROMPT - Set a custom system prompt (or leave empty to reset)\n/resetsettings - Clear all your saved settings\n/ask YOUR_QUESTION - Ask the AI a question\n/help - Show this help message",
+  "new_chat_success": "✅ Conversation history cleared. Starting a new chat.",
+  "help": "Available commands:\n/start - Start the bot and get instructions\n/setkey YOUR_API_KEY - Save your OpenRouter API key\n/setmodel MODEL_ID - Set the default AI model\n/setsystemprompt YOUR_PROMPT - Set a custom system prompt (or leave empty to reset)\n/resetsettings - Clear all your saved settings\n/ask YOUR_QUESTION - Ask the AI a question (remembers conversation history)\n/newchat - Clear the conversation history and start fresh\n/help - Show this help message",
   "current_settings": "⚙️ Your current settings:\nModel: `{model}`\nSystem Prompt: `{systemPrompt}`"
 }
