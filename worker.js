@@ -305,8 +305,8 @@ function levenshteinDistance(s1, s2) {
  * @returns {string | null} The detected command name (without /) or null if no close match.
  */
 function detectCommand(input) {
-    // Add 'setpersona' to the list of commands
-    const commands = ['start', 'setkey', 'setmodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat', 'search', 'listmodels', 'setlang', 'setpersona']; // Bot commands
+    // Replace 'setmodel' and 'listmodels' with 'changemodel'
+    const commands = ['start', 'setkey', 'changemodel', 'setsystemprompt', 'resetsettings', 'ask', 'help', 'newchat', 'search', 'setlang', 'setpersona']; // Bot commands
     if (!input || !input.startsWith('/')) {
         return null;
     }
@@ -348,6 +348,62 @@ function t(lang, key, replacements = {}) {
 		text = text.replace(`{${placeholder}}`, replacements[placeholder]);
 	}
 	return text;
+}
+
+/**
+ * Creates the inline keyboard markup for model selection pagination.
+ * @param {Array<{id: string, name: string}>} models - The full list of models.
+ * @param {number} page - The current page number (1-based).
+ * @param {string} lang - The language code for button text.
+ * @returns {object} The inline keyboard markup object.
+ */
+function createModelKeyboard(models, page, lang) {
+    const modelsPerPage = 5; // Adjust as needed
+    const startIndex = (page - 1) * modelsPerPage;
+    const endIndex = startIndex + modelsPerPage;
+    const pageModels = models.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(models.length / modelsPerPage);
+
+    const keyboard = pageModels.map(model => ([
+        // Button text can be just the ID, or ID + Name if space allows
+        // Using just ID for simplicity and to avoid hitting button text limits
+        { text: model.id, callback_data: `setmodel_${model.id}` }
+    ]));
+
+    const navigationRow = [];
+    if (page > 1) {
+        navigationRow.push({ text: `⬅️ ${t(lang, 'pagination_back')}`, callback_data: `modelpage_${page - 1}` });
+    }
+    if (page < totalPages) {
+        navigationRow.push({ text: `${t(lang, 'pagination_next')} ➡️`, callback_data: `modelpage_${page + 1}` });
+    }
+
+    if (navigationRow.length > 0) {
+        keyboard.push(navigationRow);
+    }
+
+    return { inline_keyboard: keyboard };
+}
+
+
+/**
+ * Answers a Telegram callback query.
+ * @param {Environment} env - Worker environment.
+ * @param {string} callbackQueryId - The ID of the callback query to answer.
+ * @param {string} [text] - Optional text to show as a notification.
+ * @returns {Promise<Response>}
+ */
+async function answerCallbackQuery(env, callbackQueryId, text) {
+    const url = `${TELEGRAM_API_BASE}${env.TELEGRAM_BOT_TOKEN}/answerCallbackQuery`;
+    const payload = {
+        callback_query_id: callbackQueryId,
+        ...(text && { text: text }), // Only include text if provided
+    };
+    return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
 }
 
 /**
@@ -673,8 +729,60 @@ export default {
 
 		try {
 			const update = await request.json();
+
+            // --- Handle Callback Queries ---
+            if (update.callback_query) {
+                const callbackQuery = update.callback_query;
+                const userId = callbackQuery.from.id;
+                const chatId = callbackQuery.message.chat.id;
+                const messageId = callbackQuery.message.message_id;
+                const data = callbackQuery.data;
+
+                const userSettings = await getUserSettings(env, userId);
+                const lang = userSettings.language;
+
+                if (data.startsWith('modelpage_')) {
+                    const page = parseInt(data.split('_')[1], 10);
+                    try {
+                        const models = await getOpenRouterModels(userSettings.apiKey); // Fetch models again
+                        if (models && models.length > 0) {
+                            const keyboard = createModelKeyboard(models, page, lang);
+                            await editMessageText(env, chatId, messageId, t(lang, 'change_model_prompt'), { reply_markup: keyboard });
+                        } else {
+                            await editMessageText(env, chatId, messageId, t(lang, 'models_list_error_nodata'));
+                        }
+                        await answerCallbackQuery(env, callbackQuery.id);
+                    } catch (error) {
+                        console.error("Error handling model page callback:", error);
+                        await answerCallbackQuery(env, callbackQuery.id, t(lang, 'models_list_error_generic'));
+                    }
+                } else if (data.startsWith('setmodel_')) {
+                    const modelId = data.substring('setmodel_'.length);
+                    // No need to re-validate here as it came from the list we provided
+                    userSettings.model = modelId;
+                    await setUserSettings(env, userId, userSettings);
+
+                    // Delete the keyboard message
+                     ctx.waitUntil(fetch(`${TELEGRAM_API_BASE}${env.TELEGRAM_BOT_TOKEN}/deleteMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: chatId, message_id: messageId }),
+                    }).catch(e => console.error("Failed to delete model selection message:", e)));
+
+                    // Send confirmation
+                    await sendMessage(env, chatId, t(lang, 'model_set_success', { model: modelId }));
+                    await answerCallbackQuery(env, callbackQuery.id); // Answer silently
+                } else {
+                     // Unknown callback data
+                     await answerCallbackQuery(env, callbackQuery.id, t(lang, 'generic_error'));
+                }
+
+                return new Response('OK'); // Acknowledge callback
+            }
+
+            // --- Handle Regular Messages ---
 			if (!update.message) {
-				// Ignore updates without a message (like channel posts, edited messages if not handled, etc.)
+				// Ignore other update types for now
 				return new Response('OK');
 			}
 
@@ -727,27 +835,27 @@ export default {
 						}
 						break;
 					}
-					case 'setmodel': {
-						if (!userSettings.apiKey) {
+                    case 'changemodel': {
+                         if (!userSettings.apiKey) {
                             await sendMessage(env, chatId, t(lang, 'key_required'));
                             break;
                         }
-						const modelId = argString.trim();
-						if (!modelId) {
-							await sendMessage(env, chatId, t(lang, 'model_set_invalid'));
-							break;
-						}
-						// Verify model exists using the user's key
-						const modelExists = await checkOpenRouterModel(userSettings.apiKey, modelId);
-						if (modelExists) {
-							userSettings.model = modelId;
-							await setUserSettings(env, userId, userSettings);
-							await sendMessage(env, chatId, t(lang, 'model_set_success', { model: modelId }));
-						} else {
-							await sendMessage(env, chatId, t(lang, 'model_fetch_error'));
-						}
-						break;
-					}
+                        await sendMessage(env, chatId, t(lang, 'models_list_fetching')); // Initial fetching message
+                        try {
+                            const models = await getOpenRouterModels(userSettings.apiKey);
+                            if (models && models.length > 0) {
+                                const keyboard = createModelKeyboard(models, 1, lang); // Start at page 1
+                                await sendMessage(env, chatId, t(lang, 'change_model_prompt'), { reply_markup: keyboard });
+                            } else {
+                                await sendMessage(env, chatId, t(lang, 'models_list_error_nodata'));
+                            }
+                        } catch (error) {
+                             console.error('Error handling /changemodel:', error);
+                             await sendMessage(env, chatId, t(lang, 'models_list_error_generic'));
+                        }
+                        break;
+                    }
+					// case 'setmodel': // Removed - handled by callback
 					case 'setsystemprompt': {
 						const prompt = argString.trim();
 						if (prompt) {
@@ -840,71 +948,7 @@ export default {
                         }
 						break;
 					}
-                    case 'listmodels': {
-                        if (!userSettings.apiKey) {
-                            await sendMessage(env, chatId, t(lang, 'key_required'));
-                            break;
-                        }
-                        const fetchingMsg = await sendMessage(env, chatId, t(lang, 'models_list_fetching'));
-                        const fetchingMsgId = fetchingMsg.ok ? (await fetchingMsg.json()).result.message_id : null;
-
-                        try {
-                            const models = await getOpenRouterModels(userSettings.apiKey);
-                            if (models && models.length > 0) {
-                                let modelListChunks = [];
-                                let currentChunk = t(lang, 'models_list_title') + "\n\n";
-                                const MAX_CHUNK_LENGTH = 4000; // Leave some buffer
-
-                                models.forEach(model => {
-                                    const modelLine = `- \`${model.id}\` (${model.name || 'No name provided'})\n`;
-                                    if (currentChunk.length + modelLine.length > MAX_CHUNK_LENGTH) {
-                                        modelListChunks.push(currentChunk);
-                                        currentChunk = modelLine; // Start new chunk
-                                    } else {
-                                        currentChunk += modelLine;
-                                    }
-                                });
-                                modelListChunks.push(currentChunk); // Add the last chunk
-
-                                // Delete "Fetching..." message if possible
-                                if (fetchingMsgId) {
-                                    // Use waitUntil to allow deletion after response is sent
-                                    ctx.waitUntil(fetch(`${TELEGRAM_API_BASE}${env.TELEGRAM_BOT_TOKEN}/deleteMessage`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ chat_id: chatId, message_id: fetchingMsgId }),
-                                    }).catch(e => console.error("Failed to delete 'Fetching...' message:", e)));
-                                }
-
-                                // Send chunks
-                                for (let i = 0; i < modelListChunks.length; i++) {
-                                    await sendMessage(env, chatId, modelListChunks[i]);
-                                    if (i < modelListChunks.length - 1) {
-                                        // Optional delay between chunks if needed
-                                        await new Promise(resolve => setTimeout(resolve, 300));
-                                    }
-                                }
-                            } else {
-                                // Edit "Fetching..." to error message if possible, otherwise send new message
-                                const errorText = t(lang, 'models_list_error_nodata'); // Use a specific "no data" message
-                                if (fetchingMsgId) {
-                                    await editMessageText(env, chatId, fetchingMsgId, errorText);
-                                } else {
-                                    await sendMessage(env, chatId, errorText);
-                                }
-                            }
-                        } catch (error) {
-                            console.error('Error handling /listmodels:', error);
-                             // Edit "Fetching..." to error message if possible, otherwise send new message
-                            const errorText = t(lang, 'models_list_error_generic'); // Use a generic error message
-                            if (fetchingMsgId) {
-                                await editMessageText(env, chatId, fetchingMsgId, errorText);
-                            } else {
-                                await sendMessage(env, chatId, errorText);
-                            }
-                        }
-						break;
-					}
+                    // case 'listmodels': // Removed - handled by /changemodel
                     case 'setlang': {
                         const targetLang = argString.trim().toLowerCase();
                         if (targetLang === 'en' || targetLang === 'id') {

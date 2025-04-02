@@ -25,15 +25,19 @@
   "search_error": "❌ Terjadi kesalahan saat pencarian web. Silakan coba lagi nanti.",
   "search_results_title": "🔍 Hasil Pencarian Web untuk \"{query}\":",
   "search_no_results": "ℹ️ Tidak ada hasil pencarian web yang ditemukan untuk \"{query}\".",
+  "change_model_prompt": "🤖 Pilih model:",
   "models_list_fetching": "⏳ Mengambil daftar model yang tersedia...",
-  "models_list_title": "🤖 Model yang Tersedia:",
   "models_list_error_nodata": "ℹ️ Tidak ada model yang ditemukan atau tidak dapat mengambil daftar. Silakan periksa kunci API Anda.",
   "models_list_error_generic": "❌ Terjadi kesalahan saat mengambil daftar model. Silakan coba lagi nanti.",
+  "pagination_next": "Lanjut",
+  "pagination_back": "Kembali",
+  "model_set_success": "✅ Model diatur ke: `{model}`",
+  "model_fetch_error": "❌ Tidak dapat memvalidasi ID model dengan OpenRouter. Pastikan ID model benar dan kunci API Anda valid.",
   "lang_set_success": "✅ Bahasa diatur ke {lang}.",
   "lang_set_format": "❌ Format perintah tidak valid. Gunakan `/setlang en` atau `/setlang id`.",
   "lang_set_invalid": "❌ Kode bahasa tidak valid. Silakan gunakan `en` untuk Bahasa Inggris atau `id` untuk Bahasa Indonesia.",
   "persona_set_success": "✅ Persona diatur ke: {persona}. System prompt telah diperbarui.",
   "persona_set_invalid": "❌ Nama persona tidak valid. Gunakan `/setpersona <nama>`. Persona yang tersedia: {personas}",
-  "help": "Perintah yang tersedia:\n/start - Mulai bot dan dapatkan instruksi\n/setkey KUNCI_API_ANDA - Simpan kunci API OpenRouter Anda\n/setmodel ID_MODEL - Atur model AI default\n/listmodels - Tampilkan daftar model AI yang tersedia\n/setsystemprompt PROMPT_ANDA - Atur system prompt kustom (atau kosongkan untuk reset)\n/setpersona <nama> - Atur persona/system prompt yang telah ditentukan (misalnya, coder, translator)\n/setlang <en|id> - Atur bahasa pilihan Anda\n/resetsettings - Hapus semua pengaturan tersimpan Anda\n/ask PERTANYAAN_ANDA - Ajukan pertanyaan ke AI (mengingat riwayat percakapan)\n/newchat - Hapus riwayat percakapan dan mulai baru\n/search KUERI_ANDA - Lakukan pencarian web\n/help - Tampilkan pesan bantuan ini",
-  "current_settings": "⚙️ Pengaturan Anda saat ini:\nModel: `{model}`\nSystem Prompt: `{systemPrompt}`"
+  "help": "Perintah yang tersedia:\n/start - Mulai bot\n/setkey KUNCI_API_ANDA - Simpan kunci API Anda\n/changemodel - Pilih model AI baru\n/setsystemprompt PROMPT_ANDA - Atur system prompt kustom (atau kosongkan untuk reset)\n/setpersona <nama> - Atur persona yang telah ditentukan (misalnya, default, coder)\n/setlang <en|id> - Atur bahasa pilihan\n/resetsettings - Hapus pengaturan Anda\n/ask PERTANYAAN_ANDA - Tanya AI (mengingat riwayat)\n/newchat - Mulai percakapan baru\n/search KUERI_ANDA - Lakukan pencarian web\n/help - Tampilkan pesan bantuan ini",
+  "current_settings": "⚙️ Saat ini:\nModel: `{model}`\nSystem Prompt: `{systemPrompt}`"
 }

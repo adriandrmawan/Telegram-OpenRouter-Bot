@@ -115,8 +115,7 @@ Berinteraksi dengan bot Anda di Telegram:
 
 *   `/start`: Menginisialisasi bot. Meminta kunci API jika belum diatur, jika tidak menampilkan opsi.
 *   `/setkey KUNCI_API_ANDA`: Menyimpan dan memverifikasi kunci API OpenRouter Anda.
-*   `/setmodel ID_MODEL`: Mengatur model AI pilihan Anda (misalnya, `/setmodel openai/gpt-4o`).
-*   `/listmodels`: Menampilkan daftar model yang tersedia dari OpenRouter yang dapat Anda gunakan dengan `/setmodel`. Memerlukan kunci API yang valid untuk diatur.
+*   `/changemodel`: Menampilkan menu interaktif untuk menjelajahi dan memilih model AI pilihan Anda. Memerlukan kunci API yang valid untuk diatur.
 *   `/setsystemprompt PROMPT_ANDA`: Mengatur prompt sistem kustom untuk AI. Biarkan prompt kosong (`/setsystemprompt`) untuk mereset ke default.
 *   `/setpersona <nama>`: Mengatur persona yang telah ditentukan (yang merupakan system prompt spesifik). Contoh persona: `default`, `coder`, `translator`, `summarizer`. Menimpa system prompt kustom.
 *   `/setlang <en|id>`: Mengatur bahasa pilihan Anda untuk respons bot (Bahasa Inggris atau Bahasa Indonesia).

@@ -115,8 +115,7 @@ Interact with your bot on Telegram:
 
 *   `/start`: Initializes the bot. Prompts for API key if not set, otherwise shows options.
 *   `/setkey YOUR_API_KEY`: Saves and verifies your OpenRouter API key.
-*   `/setmodel MODEL_ID`: Sets your preferred AI model (e.g., `/setmodel openai/gpt-4o`).
-*   `/listmodels`: Lists available models from OpenRouter that you can use with `/setmodel`. Requires a valid API key to be set.
+*   `/changemodel`: Shows an interactive menu to browse and select your preferred AI model. Requires a valid API key to be set.
 *   `/setsystemprompt YOUR_PROMPT`: Sets a custom system prompt for the AI. Leave the prompt empty (`/setsystemprompt`) to reset to the default.
 *   `/setpersona <name>`: Sets a predefined persona (which is a specific system prompt). Example personas: `default`, `coder`, `translator`, `summarizer`. Overwrites custom system prompt.
 *   `/setlang <en|id>`: Sets your preferred language for bot responses (English or Indonesian).
