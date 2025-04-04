@@ -1,0 +1,25 @@
+name = "your-worker-name"
+account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+main = "worker.js"
+compatibility_date = "2024-03-20" # Update to a recent date
+
+# Environment variables for secrets and configuration
+# These should be set in your Cloudflare dashboard (Settings > Variables)
+# or via `wrangler secret put <VARIABLE_NAME>`
+# NEVER commit secrets directly into this file or your repository!
+[vars]
+ ALLOWED_USER_IDS = "YOUR_TELEGRAM_USER_IDS" # Comma-separated list of allowed Telegram User IDs
+ DEFAULT_LANGUAGE = "en" # or "id"
+ DEFAULT_MODEL = "deepseek/deepseek-chat-v3-0324:free" # Default OpenRouter model identifier
+ DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant."
+ GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY"
+ GOOGLE_CX = "YOUR_GOOGLE_CX"
+ TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+
+# KV Namespace Bindings
+# Create KV namespaces in your Cloudflare dashboard (Workers & Pages > KV)
+# and add the bindings here. Replace the placeholder IDs.
+
+[[kv_namespaces]]
+binding = "USER_DATA" # Name used to access the KV namespace in the worker code
+id = "YOUR_USER_DATA_KV_ID" # The Preview ID of your TOKEN_BLACKLIST KV namespace (Optional but needed for wrangler dev)
